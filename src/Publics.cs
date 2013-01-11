@@ -1,6 +1,6 @@
 #region License and Terms
 //
-// Eggado
+// OpenWebClient
 // Copyright (c) 2013 Atif Aziz. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
