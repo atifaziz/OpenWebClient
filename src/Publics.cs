@@ -20,5 +20,5 @@
 namespace OpenWebClient
 {
     public partial class WebClient {}
-    public partial class WebClientModifiers {}
+    public partial class WebClientExtensions {}
 }
