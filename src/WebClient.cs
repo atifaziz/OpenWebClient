@@ -29,12 +29,12 @@ namespace OpenWebClient
 
     partial class WebClient : System.Net.WebClient
     {
-        public Func<WebRequest, WebRequest> WebRequestModifier { get; set; }
-        public Func<WebResponse, WebResponse> WebResponseModifier { get; set; }
+        public Func<WebRequest, WebRequest> WebRequestHandler { get; set; }
+        public Func<WebResponse, WebResponse> WebResponseHandler { get; set; }
 
         protected override WebRequest GetWebRequest(Uri address)
         {
-            return WithModifiers(base.GetWebRequest(address), WebRequestModifier, Validate);
+            return WithHandlers(base.GetWebRequest(address), WebRequestHandler, Validate);
         }
 
         static WebRequest Validate(WebRequest request)
@@ -45,7 +45,7 @@ namespace OpenWebClient
 
         protected override WebResponse GetWebResponse(WebRequest request)
         {
-            return WithModifiers(base.GetWebResponse(request), WebResponseModifier, Validate);
+            return WithHandlers(base.GetWebResponse(request), WebResponseHandler, Validate);
         }
 
         static WebResponse Validate(WebResponse response)
@@ -54,13 +54,13 @@ namespace OpenWebClient
             return response;
         }
 
-        static T WithModifiers<T>(T response, Func<T, T> modifier, Func<T, T> validator)
+        static T WithHandlers<T>(T response, Func<T, T> handler, Func<T, T> validator)
         {
-            modifier = modifier ?? (wr => wr);
-            return modifier.GetInvocationList()
-                           .Cast<Func<T, T>>()
-                           .Select(m => new Func<T, T>(wr => m(validator(wr))))
-                           .Aggregate((im, om) => wr => om(im(wr)))(response);
+            handler = handler ?? (wr => wr);
+            var handlers =
+                from Func<T, T> h in handler.GetInvocationList()
+                select new Func<T, T>(wr => h(validator(wr)));
+            return handlers.Aggregate((im, om) => wr => om(im(wr)))(response);
 
         }
     }
@@ -68,83 +68,83 @@ namespace OpenWebClient
     static partial class WebClientExtensions
     {
         /// <summary>
-        /// Adds a simple web request modifier called for each request
+        /// Adds a simple web request handler called for each request
         /// issued by this <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddWebRequestModifier(this WebClient client, Action<WebRequest> modifier)
+        public static WebClient AddWebRequestHandler(this WebClient client, Action<WebRequest> handler)
         {
-            return client.AddWebRequestModifier<WebRequest>(modifier);
+            return client.AddWebRequestHandler<WebRequest>(handler);
         }
 
         /// <summary>
-        /// Adds a simple web request modifier called for each request of
+        /// Adds a simple web request handler called for each request of
         /// type <see cref="HttpWebRequest"/> issued by this
         /// <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddHttpWebRequestModifier(this WebClient client, Action<HttpWebRequest> modifier)
+        public static WebClient AddHttpWebRequestHandler(this WebClient client, Action<HttpWebRequest> handler)
         {
-            return client.AddWebRequestModifier(modifier);
+            return client.AddWebRequestHandler(handler);
         }
 
         /// <summary>
-        /// Adds a simple web request modifier called for each request of
+        /// Adds a simple web request handler called for each request of
         /// type <see cref="WebRequest"/> issued by this
         /// <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddWebRequestModifier<T>(this WebClient client, Action<T> modifier)
+        public static WebClient AddWebRequestHandler<T>(this WebClient client, Action<T> handler)
             where T : WebRequest
         {
             if (client == null) throw new ArgumentNullException("client");
-            client.WebRequestModifier += RequestOf(modifier);
+            client.WebRequestHandler += RequestOf(handler);
             return client;
         }
 
         /// <summary>
-        /// Adds a simple web request modifier that is called for only the
+        /// Adds a simple web request handler that is called for only the
         /// next request issued by this <see cref="WebClient"/> and then
         /// discarded.
         /// </summary>
         /// <remarks>
-        /// The modifier is only called once regardless of whether it throws
+        /// The handler is only called once regardless of whether it throws
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeWebRequestModifier(this WebClient client, Action<WebRequest> modifier)
+        public static WebClient AddOneTimeWebRequestHandler(this WebClient client, Action<WebRequest> handler)
         {
-            return client.AddOneTimeWebRequestModifier<WebRequest>(modifier);
+            return client.AddOneTimeWebRequestHandler<WebRequest>(handler);
         }
 
         /// <summary>
-        /// Adds a simple web request modifier called for only the next
+        /// Adds a simple web request handler called for only the next
         /// request of type <see cref="HttpWebRequest"/> issued by this
         /// <see cref="WebClient"/> and then discarded.
         /// </summary>
         /// <remarks>
-        /// The modifier is only called once regardless of whether it throws
+        /// The handler is only called once regardless of whether it throws
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeHttpWebRequestModifier(this WebClient client, Action<HttpWebRequest> modifier)
+        public static WebClient AddOneTimeHttpWebRequestHandler(this WebClient client, Action<HttpWebRequest> handler)
         {
-            return client.AddOneTimeWebRequestModifier(modifier);
+            return client.AddOneTimeWebRequestHandler(handler);
         }
 
         /// <summary>
-        /// Adds a simple web request modifier called for only the next
+        /// Adds a simple web request handler called for only the next
         /// request of type <typeparamref name="T"/> issued by this
         /// <see cref="WebClient"/> and then discarded, where
         /// <typeparamref name="T"/> is an instance of
         /// <see cref="WebRequest"/>.
         /// </summary>
         /// <remarks>
-        /// The modifier is only called once regardless of whether it throws
+        /// The handler is only called once regardless of whether it throws
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeWebRequestModifier<T>(this WebClient client, Action<T> modifier)
+        public static WebClient AddOneTimeWebRequestHandler<T>(this WebClient client, Action<T> handler)
             where T : WebRequest
         {
             if (client == null) throw new ArgumentNullException("client");
@@ -152,105 +152,105 @@ namespace OpenWebClient
             var cell = new Func<WebRequest, WebRequest>[1];
             cell[0] = RequestOf<T>(wr =>
             {
-                client.WebRequestModifier -= cell[0];
-                modifier(wr);
+                client.WebRequestHandler -= cell[0];
+                handler(wr);
             });
-            client.WebRequestModifier += cell[0];
+            client.WebRequestHandler += cell[0];
 
             return client;
         }
 
-        static Func<WebRequest, WebRequest> RequestOf<T>(Action<T> modifier) where T : WebRequest
+        static Func<WebRequest, WebRequest> RequestOf<T>(Action<T> handler) where T : WebRequest
         {
-            if (modifier == null) throw new ArgumentNullException("modifier");
+            if (handler == null) throw new ArgumentNullException("handler");
 
             return request =>
             {
                 var typedRequest = request as T;
                 if (typedRequest != null)
-                    modifier(typedRequest);
+                    handler(typedRequest);
                 return request;
             };
         }
 
         /// <summary>
-        /// Adds a simple web request modifier called for each request
+        /// Adds a simple web request handler called for each request
         /// issued by this <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddWebResponseModifier(this WebClient client, Action<WebResponse> modifier)
+        public static WebClient AddWebResponseHandler(this WebClient client, Action<WebResponse> handler)
         {
-            return client.AddWebResponseModifier<WebResponse>(modifier);
+            return client.AddWebResponseHandler<WebResponse>(handler);
         }
 
         /// <summary>
-        /// Adds a simple web request modifier called for each request of
+        /// Adds a simple web request handler called for each request of
         /// type <see cref="HttpWebResponse"/> issued by this
         /// <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddHttpWebResponseModifier(this WebClient client, Action<HttpWebResponse> modifier)
+        public static WebClient AddHttpWebResponseHandler(this WebClient client, Action<HttpWebResponse> handler)
         {
-            return client.AddWebResponseModifier(modifier);
+            return client.AddWebResponseHandler(handler);
         }
 
         /// <summary>
-        /// Adds a simple web request modifier called for each request of
+        /// Adds a simple web request handler called for each request of
         /// type <see cref="WebResponse"/> issued by this
         /// <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddWebResponseModifier<T>(this WebClient client, Action<T> modifier)
+        public static WebClient AddWebResponseHandler<T>(this WebClient client, Action<T> handler)
             where T : WebResponse
         {
             if (client == null) throw new ArgumentNullException("client");
-            client.WebResponseModifier += ResponseOf(modifier);
+            client.WebResponseHandler += ResponseOf(handler);
             return client;
         }
 
         /// <summary>
-        /// Adds a simple web request modifier that is called for only the
+        /// Adds a simple web request handler that is called for only the
         /// next request issued by this <see cref="WebClient"/> and then
         /// discarded.
         /// </summary>
         /// <remarks>
-        /// The modifier is only called once regardless of whether it throws
+        /// The handler is only called once regardless of whether it throws
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeWebResponseModifier(this WebClient client, Action<WebResponse> modifier)
+        public static WebClient AddOneTimeWebResponseHandler(this WebClient client, Action<WebResponse> handler)
         {
-            return client.AddOneTimeWebResponseModifier<WebResponse>(modifier);
+            return client.AddOneTimeWebResponseHandler<WebResponse>(handler);
         }
 
         /// <summary>
-        /// Adds a simple web request modifier called for only the next
+        /// Adds a simple web request handler called for only the next
         /// request of type <see cref="HttpWebResponse"/> issued by this
         /// <see cref="WebClient"/> and then discarded.
         /// </summary>
         /// <remarks>
-        /// The modifier is only called once regardless of whether it throws
+        /// The handler is only called once regardless of whether it throws
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeHttpWebResponseModifier(this WebClient client, Action<HttpWebResponse> modifier)
+        public static WebClient AddOneTimeHttpWebResponseHandler(this WebClient client, Action<HttpWebResponse> handler)
         {
-            return client.AddOneTimeWebResponseModifier(modifier);
+            return client.AddOneTimeWebResponseHandler(handler);
         }
 
         /// <summary>
-        /// Adds a simple web request modifier called for only the next
+        /// Adds a simple web request handler called for only the next
         /// request of type <typeparamref name="T"/> issued by this
         /// <see cref="WebClient"/> and then discarded, where
         /// <typeparamref name="T"/> is an instance of
         /// <see cref="WebRequest"/>.
         /// </summary>
         /// <remarks>
-        /// The modifier is only called once regardless of whether it throws
+        /// The handler is only called once regardless of whether it throws
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeWebResponseModifier<T>(this WebClient client, Action<T> modifier)
+        public static WebClient AddOneTimeWebResponseHandler<T>(this WebClient client, Action<T> handler)
             where T : WebResponse
         {
             if (client == null) throw new ArgumentNullException("client");
@@ -258,23 +258,23 @@ namespace OpenWebClient
             var cell = new Func<WebResponse, WebResponse>[1];
             cell[0] = ResponseOf<T>(wr =>
             {
-                client.WebResponseModifier -= cell[0];
-                modifier(wr);
+                client.WebResponseHandler -= cell[0];
+                handler(wr);
             });
-            client.WebResponseModifier += cell[0];
+            client.WebResponseHandler += cell[0];
 
             return client;
         }
 
-        static Func<WebResponse, WebResponse> ResponseOf<T>(Action<T> modifier) where T : WebResponse
+        static Func<WebResponse, WebResponse> ResponseOf<T>(Action<T> handler) where T : WebResponse
         {
-            if (modifier == null) throw new ArgumentNullException("modifier");
+            if (handler == null) throw new ArgumentNullException("handler");
 
             return request =>
             {
                 var typedResponse = request as T;
                 if (typedResponse != null)
-                    modifier(typedResponse);
+                    handler(typedResponse);
                 return request;
             };
         }
