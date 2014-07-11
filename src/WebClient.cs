@@ -27,6 +27,12 @@ namespace OpenWebClient
 
     #endregion
 
+    /// <summary>
+    /// A <see cref="System.Net.WebClient"/> implementation that enables
+    /// <see cref="WebRequest"/> and <see cref="WebResponse"/> handling and
+    /// customization without subclassing.
+    /// </summary>
+
     partial class WebClient : System.Net.WebClient
     {
         public Func<WebRequest, WebRequest> WebRequestHandler { get; set; }
