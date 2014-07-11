@@ -31,21 +31,38 @@ namespace OpenWebClient
     partial class WebClient : System.Net.WebClient
     {
         public Func<WebRequest, WebRequest> WebRequestModifier { get; set; }
+        public Func<WebResponse, WebResponse> WebResponseModifier { get; set; }
 
         protected override WebRequest GetWebRequest(Uri address)
         {
-            var request = base.GetWebRequest(address);
-            var modifier = WebRequestModifier ?? (wr => wr);
-            return modifier.GetInvocationList()
-                           .Cast<Func<WebRequest, WebRequest>>()
-                           .Select(m => new Func<WebRequest, WebRequest>(wr => m(Validate(wr))))
-                           .Aggregate((im, om) => wr => om(im(wr)))(request);
+            return WithModifiers(base.GetWebRequest(address), WebRequestModifier, Validate);
         }
 
         static WebRequest Validate(WebRequest request)
         {
             if (request == null) throw new ArgumentNullException("request");
             return request;
+        }
+
+        protected override WebResponse GetWebResponse(WebRequest request)
+        {
+            return WithModifiers(base.GetWebResponse(request), WebResponseModifier, Validate);
+        }
+
+        static WebResponse Validate(WebResponse response)
+        {
+            if (response == null) throw new ArgumentNullException("response");
+            return response;
+        }
+
+        static T WithModifiers<T>(T response, Func<T, T> modifier, Func<T, T> validator)
+        {
+            modifier = modifier ?? (wr => wr);
+            return modifier.GetInvocationList()
+                           .Cast<Func<T, T>>()
+                           .Select(m => new Func<T, T>(wr => m(validator(wr))))
+                           .Aggregate((im, om) => wr => om(im(wr)))(response);
+
         }
     }
 
@@ -82,7 +99,7 @@ namespace OpenWebClient
             where T : WebRequest
         {
             if (client == null) throw new ArgumentNullException("client");
-            client.WebRequestModifier += Typed(modifier);
+            client.WebRequestModifier += RequestOf(modifier);
             return client;
         }
 
@@ -118,9 +135,10 @@ namespace OpenWebClient
 
         /// <summary>
         /// Adds a simple web request modifier called for only the next
-        /// request of type <see cref="{T}"/> issued by this
+        /// request of type <typeparamref name="T"/> issued by this
         /// <see cref="WebClient"/> and then discarded, where
-        /// <see cref="{T}"/> is an instance of <see cref="{WebRequest}"/>.
+        /// <typeparamref name="T"/> is an instance of
+        /// <see cref="WebRequest"/>.
         /// </summary>
         /// <remarks>
         /// The modifier is only called once regardless of whether it throws
@@ -133,7 +151,7 @@ namespace OpenWebClient
             if (client == null) throw new ArgumentNullException("client");
 
             var cell = new Func<WebRequest, WebRequest>[1];
-            cell[0] = Typed<T>(wr =>
+            cell[0] = RequestOf<T>(wr =>
             {
                 client.WebRequestModifier -= cell[0];
                 modifier(wr);
@@ -143,7 +161,7 @@ namespace OpenWebClient
             return client;
         }
 
-        static Func<WebRequest, WebRequest> Typed<T>(Action<T> modifier) where T : WebRequest
+        static Func<WebRequest, WebRequest> RequestOf<T>(Action<T> modifier) where T : WebRequest
         {
             if (modifier == null) throw new ArgumentNullException("modifier");
 
@@ -152,6 +170,112 @@ namespace OpenWebClient
                 var typedRequest = request as T;
                 if (typedRequest != null)
                     modifier(typedRequest);
+                return request;
+            };
+        }
+
+        /// <summary>
+        /// Adds a simple web request modifier called for each request
+        /// issued by this <see cref="WebClient"/>.
+        /// </summary>
+
+        public static WebClient AddWebResponseModifier(this WebClient client, Action<WebResponse> modifier)
+        {
+            return client.AddWebResponseModifier<WebResponse>(modifier);
+        }
+
+        /// <summary>
+        /// Adds a simple web request modifier called for each request of
+        /// type <see cref="HttpWebResponse"/> issued by this
+        /// <see cref="WebClient"/>.
+        /// </summary>
+
+        public static WebClient AddHttpWebResponseModifier(this WebClient client, Action<HttpWebResponse> modifier)
+        {
+            return client.AddWebResponseModifier(modifier);
+        }
+
+        /// <summary>
+        /// Adds a simple web request modifier called for each request of
+        /// type <see cref="WebResponse"/> issued by this
+        /// <see cref="WebClient"/>.
+        /// </summary>
+
+        public static WebClient AddWebResponseModifier<T>(this WebClient client, Action<T> modifier)
+            where T : WebResponse
+        {
+            if (client == null) throw new ArgumentNullException("client");
+            client.WebResponseModifier += ResponseOf(modifier);
+            return client;
+        }
+
+        /// <summary>
+        /// Adds a simple web request modifier that is called for only the
+        /// next request issued by this <see cref="WebClient"/> and then
+        /// discarded.
+        /// </summary>
+        /// <remarks>
+        /// The modifier is only called once regardless of whether it throws
+        /// an exception or not.
+        /// </remarks>
+
+        public static WebClient AddOneTimeWebResponseModifier(this WebClient client, Action<WebResponse> modifier)
+        {
+            return client.AddOneTimeWebResponseModifier<WebResponse>(modifier);
+        }
+
+        /// <summary>
+        /// Adds a simple web request modifier called for only the next
+        /// request of type <see cref="HttpWebResponse"/> issued by this
+        /// <see cref="WebClient"/> and then discarded.
+        /// </summary>
+        /// <remarks>
+        /// The modifier is only called once regardless of whether it throws
+        /// an exception or not.
+        /// </remarks>
+
+        public static WebClient AddOneTimeHttpWebResponseModifier(this WebClient client, Action<HttpWebResponse> modifier)
+        {
+            return client.AddOneTimeWebResponseModifier(modifier);
+        }
+
+        /// <summary>
+        /// Adds a simple web request modifier called for only the next
+        /// request of type <typeparamref name="T"/> issued by this
+        /// <see cref="WebClient"/> and then discarded, where
+        /// <typeparamref name="T"/> is an instance of
+        /// <see cref="WebRequest"/>.
+        /// </summary>
+        /// <remarks>
+        /// The modifier is only called once regardless of whether it throws
+        /// an exception or not.
+        /// </remarks>
+
+        public static WebClient AddOneTimeWebResponseModifier<T>(this WebClient client, Action<T> modifier)
+            where T : WebResponse
+        {
+            if (client == null) throw new ArgumentNullException("client");
+
+            var cell = new Func<WebResponse, WebResponse>[1];
+            cell[0] = ResponseOf<T>(wr =>
+            {
+                client.WebResponseModifier -= cell[0];
+                modifier(wr);
+            });
+            client.WebResponseModifier += cell[0];
+
+            return client;
+        }
+
+        static Func<WebResponse, WebResponse> ResponseOf<T>(Action<T> modifier) where T : WebResponse
+        {
+            if (modifier == null) throw new ArgumentNullException("modifier");
+
+            return request =>
+            {
+                var typedResponse = request as T;
+                if (typedResponse != null)
+                    modifier(typedResponse);
                 return request;
             };
         }
