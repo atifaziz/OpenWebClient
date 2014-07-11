@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>OpenWebClient.Source</id>
+        <version>1.0.0</version>
+        <title>Open WebClient for C#</title>
+        <authors>Atif Aziz</authors>
+        <owners>Atif Aziz</owners>
+        <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+        <projectUrl>https://bitbucket.org/raboof/owc</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>An implementation of WebClient that is open for modification.</description>
+        <copyright>Copyright (c) 2013 Atif Aziz. All rights reserved.</copyright>
+        <tags>http system.net webclient c#</tags>
+    </metadata>
+    <files>
+        <file src="src\WebClient.cs" target="content\App_Packages\OpenWebClient\WebClient.cs" />
+    </files>
+</package>
