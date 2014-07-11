@@ -22,7 +22,6 @@ namespace OpenWebClient
     #region Imports
 
     using System;
-    using System.Diagnostics;
     using System.Linq;
     using System.Net;
 
