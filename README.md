@@ -41,7 +41,7 @@ The handlers will be called for every request and/or response through the same `
 
     wc.AddOneTimeWebRequestHandler(wr => wr.Timeout = (int) timeout.TotalMilliseconds);
 
-When making HTTP requests, you want to work with an [HttpWebRequest](`http://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.aspx`) because some HTTP-specific properties like [`AutomaticDecompression`](http://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.automaticdecompression.aspx) are not available `WebRequest`. Instead of adding a regular handler and down-casting its argument, you can use `AddHttpWebRequestHandler`:
+When making HTTP requests, you want to work with an [`HttpWebRequest`](`http://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.aspx`) because some HTTP-specific properties like [`AutomaticDecompression`](http://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.automaticdecompression.aspx) are not available `WebRequest`. Instead of adding a regular handler and down-casting its argument, you can use `AddHttpWebRequestHandler`:
 
     wc.AddHttpWebRequestHandler(wr => wr.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate);
 
