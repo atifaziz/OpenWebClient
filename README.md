@@ -37,17 +37,17 @@ Note that you can use `+=` to attach multiple handlers. OpenWebClient also provi
     wc.AddWebRequestHandler(wr => wr.Timeout = (int) timeout.TotalMilliseconds);
     Console.WriteLine(wc.DownloadString("http://www.example.com"));
 
-The handlers will be called for every request and/or response through the same `WebClient` instance. If you want to set the time-out only for the next request only and reset to default there after, use `AddOneTimeWebRequestHandler` instead:
+The handlers will be called for every request and/or response through the same `WebClient` instance. If you want to set the time-out only for the next request only and reset to default thereafter, use `AddOneTimeWebRequestHandler` instead:
 
     wc.AddOneTimeWebRequestHandler(wr => wr.Timeout = (int) timeout.TotalMilliseconds);
 
-When making HTTP requests, you want to work with an [HttpWebRequest](`http://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.aspx`) because some HTTP-specific properties like [`AutomaticDecompression`])(http://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.automaticdecompression.aspx) are not available `WebRequest`. Instead of adding a regular handler and down-casting its argument, you can use `AddHttpWebRequestHandler`:
+When making HTTP requests, you want to work with an [HttpWebRequest](`http://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.aspx`) because some HTTP-specific properties like [`AutomaticDecompression`](http://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.automaticdecompression.aspx) are not available `WebRequest`. Instead of adding a regular handler and down-casting its argument, you can use `AddHttpWebRequestHandler`:
 
     wc.AddHttpWebRequestHandler(wr => wr.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate);
 
 The same is true for responses.
 
-OpenWebClient's subclass of `WebClient` is deliberately named the same so you can start using it incrementally and with minimal changes to your existing source files. Simply importing the `OpenWebClient` namespace however will cause a conflict if you are also importing `System.Net` too and using `WebClient` already. By adding an [alias directive](http://msdn.microsoft.com/en-us/library/aa664765.aspx) for `WebClient` to point to `OpenWebClient.WebClient`, you can resolve the conflict and start using OpenWebClient's version immediately. You imports section should therefore look like this:
+OpenWebClient's subclass of `WebClient` is deliberately named the same so you can start using it incrementally and with minimal changes to your existing source files. Simply importing the `OpenWebClient` namespace however will cause a conflict if you are importing `System.Net` too and using `WebClient` already. By adding an [alias directive](http://msdn.microsoft.com/en-us/library/aa664765.aspx) for `WebClient` to point to `OpenWebClient.WebClient`, you can resolve the conflict and start using OpenWebClient's version immediately. You imports section should therefore look like this:
 
     using System.Net;
     using OpenWebClient;
