@@ -45,7 +45,17 @@ When making HTTP requests, you want to work with an [`HttpWebRequest`](`http://m
 
     wc.AddHttpWebRequestHandler(wr => wr.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate);
 
-The same is true for responses.
+Since the handler adding methods return the `WebClient` instance on which they act, you can also chain the calls. The example below sets a time-out (for the next request only) and automatic decompressions and cookie management for all requests:
+
+    var timeout = TimeSpan.FromMinutes(2);
+    var cookies = new CookieContainer();
+    var wc = new OpenWebClient.WebClient()
+        .AddOneTimeWebRequestHandler(wr => wr.Timeout = (int) timeout.TotalMilliseconds)
+        .AddHttpWebRequestHandler(wr => wr.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate)
+        .AddHttpWebRequestHandler(wr => wr.CookieContainer = cookies);
+    Console.WriteLine(wc.DownloadString("http://www.example.com"));
+
+The same is all true for response handlers.
 
 OpenWebClient's subclass of `WebClient` is deliberately named the same so you can start using it incrementally and with minimal changes to your existing source files. Simply importing the `OpenWebClient` namespace however will cause a conflict if you are importing `System.Net` too and using `WebClient` already. By adding an [alias directive](http://msdn.microsoft.com/en-us/library/aa664765.aspx) for `WebClient` to point to `OpenWebClient.WebClient`, you can resolve the conflict and start using OpenWebClient's version immediately. You imports section should therefore look like this:
 
