@@ -78,9 +78,10 @@ namespace OpenWebClient
         /// issued by this <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddWebRequestHandler(this WebClient client, Action<WebRequest> handler)
+        public static T AddWebRequestHandler<T>(this T client, Action<WebRequest> handler)
+            where T : WebClient
         {
-            return client.AddWebRequestHandler<WebRequest>(handler);
+            return client.AddWebRequestHandler<T, WebRequest>(handler);
         }
 
         /// <summary>
@@ -89,7 +90,8 @@ namespace OpenWebClient
         /// <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddHttpWebRequestHandler(this WebClient client, Action<HttpWebRequest> handler)
+        public static T AddHttpWebRequestHandler<T>(this T client, Action<HttpWebRequest> handler)
+            where T : WebClient
         {
             return client.AddWebRequestHandler(handler);
         }
@@ -100,8 +102,9 @@ namespace OpenWebClient
         /// <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddWebRequestHandler<T>(this WebClient client, Action<T> handler)
-            where T : WebRequest
+        public static TClient AddWebRequestHandler<TClient, TRequest>(this TClient client, Action<TRequest> handler)
+            where TClient : WebClient
+            where TRequest : WebRequest
         {
             if (client == null) throw new ArgumentNullException("client");
             client.WebRequestHandler += RequestOf(handler);
@@ -118,9 +121,10 @@ namespace OpenWebClient
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeWebRequestHandler(this WebClient client, Action<WebRequest> handler)
+        public static T AddOneTimeWebRequestHandler<T>(this T client, Action<WebRequest> handler)
+            where T : WebClient
         {
-            return client.AddOneTimeWebRequestHandler<WebRequest>(handler);
+            return client.AddOneTimeWebRequestHandler<T, WebRequest>(handler);
         }
 
         /// <summary>
@@ -133,16 +137,17 @@ namespace OpenWebClient
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeHttpWebRequestHandler(this WebClient client, Action<HttpWebRequest> handler)
+        public static T AddOneTimeHttpWebRequestHandler<T>(this T client, Action<HttpWebRequest> handler)
+            where T : WebClient
         {
             return client.AddOneTimeWebRequestHandler(handler);
         }
 
         /// <summary>
         /// Adds a simple web request handler called for only the next
-        /// request of type <typeparamref name="T"/> issued by this
+        /// request of type <typeparamref name="TRequest"/> issued by this
         /// <see cref="WebClient"/> and then discarded, where
-        /// <typeparamref name="T"/> is an instance of
+        /// <typeparamref name="TRequest"/> is an instance of
         /// <see cref="WebRequest"/>.
         /// </summary>
         /// <remarks>
@@ -150,13 +155,14 @@ namespace OpenWebClient
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeWebRequestHandler<T>(this WebClient client, Action<T> handler)
-            where T : WebRequest
+        public static TClient AddOneTimeWebRequestHandler<TClient, TRequest>(this TClient client, Action<TRequest> handler)
+            where TClient : WebClient
+            where TRequest : WebRequest
         {
             if (client == null) throw new ArgumentNullException("client");
 
             var cell = new Func<WebRequest, WebRequest>[1];
-            cell[0] = RequestOf<T>(wr =>
+            cell[0] = RequestOf<TRequest>(wr =>
             {
                 client.WebRequestHandler -= cell[0];
                 handler(wr);
@@ -184,9 +190,10 @@ namespace OpenWebClient
         /// issued by this <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddWebResponseHandler(this WebClient client, Action<WebResponse> handler)
+        public static T AddWebResponseHandler<T>(this T client, Action<WebResponse> handler)
+            where T : WebClient
         {
-            return client.AddWebResponseHandler<WebResponse>(handler);
+            return client.AddWebResponseHandler<T, WebResponse>(handler);
         }
 
         /// <summary>
@@ -195,7 +202,8 @@ namespace OpenWebClient
         /// <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddHttpWebResponseHandler(this WebClient client, Action<HttpWebResponse> handler)
+        public static T AddHttpWebResponseHandler<T>(this T client, Action<HttpWebResponse> handler)
+            where T : WebClient
         {
             return client.AddWebResponseHandler(handler);
         }
@@ -206,8 +214,9 @@ namespace OpenWebClient
         /// <see cref="WebClient"/>.
         /// </summary>
 
-        public static WebClient AddWebResponseHandler<T>(this WebClient client, Action<T> handler)
-            where T : WebResponse
+        public static TClient AddWebResponseHandler<TClient, TResponse>(this TClient client, Action<TResponse> handler)
+            where TClient : WebClient
+            where TResponse : WebResponse
         {
             if (client == null) throw new ArgumentNullException("client");
             client.WebResponseHandler += ResponseOf(handler);
@@ -224,9 +233,10 @@ namespace OpenWebClient
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeWebResponseHandler(this WebClient client, Action<WebResponse> handler)
+        public static T AddOneTimeWebResponseHandler<T>(this T client, Action<WebResponse> handler)
+            where T : WebClient
         {
-            return client.AddOneTimeWebResponseHandler<WebResponse>(handler);
+            return client.AddOneTimeWebResponseHandler<T, WebResponse>(handler);
         }
 
         /// <summary>
@@ -239,16 +249,17 @@ namespace OpenWebClient
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeHttpWebResponseHandler(this WebClient client, Action<HttpWebResponse> handler)
+        public static T AddOneTimeHttpWebResponseHandler<T>(this T client, Action<HttpWebResponse> handler)
+            where T : WebClient
         {
             return client.AddOneTimeWebResponseHandler(handler);
         }
 
         /// <summary>
         /// Adds a simple web request handler called for only the next
-        /// request of type <typeparamref name="T"/> issued by this
+        /// request of type <typeparamref name="TResponse"/> issued by this
         /// <see cref="WebClient"/> and then discarded, where
-        /// <typeparamref name="T"/> is an instance of
+        /// <typeparamref name="TResponse"/> is an instance of
         /// <see cref="WebRequest"/>.
         /// </summary>
         /// <remarks>
@@ -256,13 +267,14 @@ namespace OpenWebClient
         /// an exception or not.
         /// </remarks>
 
-        public static WebClient AddOneTimeWebResponseHandler<T>(this WebClient client, Action<T> handler)
-            where T : WebResponse
+        public static TClient AddOneTimeWebResponseHandler<TClient, TResponse>(this TClient client, Action<TResponse> handler)
+            where TClient : WebClient
+            where TResponse : WebResponse
         {
             if (client == null) throw new ArgumentNullException("client");
 
             var cell = new Func<WebResponse, WebResponse>[1];
-            cell[0] = ResponseOf<T>(wr =>
+            cell[0] = ResponseOf<TResponse>(wr =>
             {
                 client.WebResponseHandler -= cell[0];
                 handler(wr);
