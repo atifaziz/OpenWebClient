@@ -12,6 +12,7 @@
         <description>An implementation of WebClient that is open for modification.</description>
         <copyright>Copyright (c) 2013 Atif Aziz. All rights reserved.</copyright>
         <tags>http system.net webclient c#</tags>
+        <releaseNotes>Stronger typed versions of handler adding extensions.</releaseNotes>
     </metadata>
     <files>
         <file src="src\WebClient.cs" target="content\App_Packages\OpenWebClient\WebClient.cs" />

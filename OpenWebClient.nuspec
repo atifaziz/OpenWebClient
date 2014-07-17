@@ -12,6 +12,7 @@
         <description>An implementation of WebClient that is open for modification.</description>
         <copyright>Copyright (c) 2013 Atif Aziz. All rights reserved.</copyright>
         <tags>http system.net webclient</tags>
+        <releaseNotes>Stronger typed versions of handler adding extensions.</releaseNotes>
     </metadata>
     <files>
         <file src="bin\Release\*" target="lib\net35-client" />
