@@ -14,9 +14,9 @@ OpenWebClient is distributed as two NuGet packages:
 ## Motiviation
 
 To do any customization of requests and responses used by
-`System.Net.WebClient`, you have subclass it and override its virtual members
-[`GetWebRequest`][gwreq] and [`GetWebResponse`][gwrsp]. You have to subclass
-because protected both members are protected.
+`System.Net.WebClient`, you have to subclass it and override its virtual
+members [`GetWebRequest`][gwreq] and [`GetWebResponse`][gwrsp]. You have to
+subclass because both members are protected.
 
 OpenWebClient solves the problem for once and for all by providing a subclass
 with the following two properties:
@@ -34,7 +34,7 @@ will be called whenever a `WebResponse` object has been obtained by
 
 ## Usage
 
-Suppose you want to set the time-out for a download. Here's how you can do it
+Suppose you want to set the time-out for a download. Here is how you can do it
 using the `WebRequestHandler` property:
 
 ```c#
@@ -59,8 +59,8 @@ Console.WriteLine(wc.DownloadString("http://www.example.com"));
 ```
 
 The handlers will be called for every request and/or response through the same
-`WebClient` instance. If you want to set the time-out only for the next request
-only and reset to default thereafter, use `AddOneTimeWebRequestHandler`
+`WebClient` instance. If you want to set the time-out for the next request
+only and reset to the default thereafter, use `AddOneTimeWebRequestHandler`
 instead:
 
 ```c#
@@ -69,14 +69,16 @@ wc.AddOneTimeWebRequestHandler(wr => wr.Timeout = (int) timeout.TotalMillisecond
 
 When making HTTP requests, you want to work with an [`HttpWebRequest`][hwebreq]
 because some HTTP-specific properties like [`AutomaticDecompression`][autodecomp]
-are not available `WebRequest`. Instead of adding a regular handler and
+are not available on `WebRequest`. Instead of adding a regular handler and
 down-casting its argument, you can use `AddHttpWebRequestHandler`:
 
 ```c#
-wc.AddHttpWebRequestHandler(wr => wr.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate);
+wc.AddHttpWebRequestHandler(wr =>
+    wr.AutomaticDecompression = DecompressionMethods.GZip
+                              | DecompressionMethods.Deflate);
 ```
 
-Since the handler adding methods return the `WebClient` instance on which they
+Since the handler-adding methods return the `WebClient` instance on which they
 act, you can also chain the calls. The example below sets a time-out (for the
 next request only) and automatic decompressions and cookie management for all
 requests:
@@ -86,7 +88,8 @@ var timeout = TimeSpan.FromMinutes(2);
 var cookies = new CookieContainer();
 var wc = new OpenWebClient.WebClient()
     .AddOneTimeWebRequestHandler(wr => wr.Timeout = (int) timeout.TotalMilliseconds)
-    .AddHttpWebRequestHandler(wr => wr.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate)
+    .AddHttpWebRequestHandler(wr => wr.AutomaticDecompression = DecompressionMethods.GZip
+                                                              | DecompressionMethods.Deflate)
     .AddHttpWebRequestHandler(wr => wr.CookieContainer = cookies);
 Console.WriteLine(wc.DownloadString("http://www.example.com"));
 ```
@@ -98,9 +101,9 @@ can start using it incrementally and with minimal changes to your existing
 source files. Simply importing the `OpenWebClient` namespace however will
 cause a conflict if you are importing `System.Net` too and using `WebClient`
 already. By adding an [alias directive][using-alias] for `WebClient` to point
-to `OpenWebClient.WebClient`, you can resolve the conflict and start using
-OpenWebClient's version immediately. You imports section should therefore look
-like this:
+to `OpenWebClient.WebClient` instead, you can resolve the conflict and start
+using OpenWebClient's version immediately. You imports section should therefore
+look like this:
 
 ```c#
 using System.Net;
