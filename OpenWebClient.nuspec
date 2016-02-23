@@ -10,7 +10,7 @@
         <projectUrl>https://bitbucket.org/raboof/owc</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>An implementation of WebClient that is open for modification.</description>
-        <copyright>Copyright (c) 2013 Atif Aziz. All rights reserved.</copyright>
+        <copyright>Copyright &#169; 2013 Atif Aziz. All rights reserved.</copyright>
         <tags>http system.net webclient</tags>
         <releaseNotes>Stronger typed versions of handler adding extensions.</releaseNotes>
     </metadata>

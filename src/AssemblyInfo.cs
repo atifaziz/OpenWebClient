@@ -25,7 +25,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("OpenWebClient")]
-[assembly: AssemblyCopyright("Copyright (c) 2013, Atif Aziz. All rights reserved.")]
+[assembly: AssemblyCopyright("Copyright \u00a9 2013, Atif Aziz. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
